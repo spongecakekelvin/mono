@@ -5546,7 +5546,7 @@ mono_metadata_generic_class_is_valuetype (MonoGenericClass *gclass)
 
 typedef struct
 {
-	GFunc func;
+	MonoGenericClassFunc func;
 	gpointer user_data;
 } GenericClassForeachData;
 
@@ -5559,7 +5559,7 @@ generic_class_foreach_callback(gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-mono_metadata_generic_class_foreach(GFunc func, gpointer user_data)
+mono_metadata_generic_class_foreach(MonoGenericClassFunc func, void* user_data)
 {
 	GenericClassForeachData data;
 	guint i;
@@ -5583,7 +5583,7 @@ mono_metadata_generic_class_foreach(GFunc func, gpointer user_data)
 }
 
 void
-mono_metadata_image_set_foreach(GFunc func, gpointer user_data)
+mono_metadata_image_set_foreach(MonoImageSetFunc func, gpointer user_data)
 {
 	GenericClassForeachData data;
 	guint i;
