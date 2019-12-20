@@ -153,3 +153,5 @@ artifacts
 # Unity specific
 ##############################################################################
 /builds/
+/tmp/
+external/buildscripts/build.gen.*
