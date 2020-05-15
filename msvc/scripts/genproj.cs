@@ -77,6 +77,8 @@ public class SlnGenerator {
 		"wasm",
 		"winaot",
 		"xammac",
+		"unityjit",
+		"unityaot"
 	};
 
 	public static readonly HashSet<string> observedProfiles = new HashSet<string> {
