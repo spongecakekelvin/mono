@@ -513,7 +513,10 @@ namespace Mono.Unity
 				if (remoteCertificate == null)
 					throw new TlsException (AlertDescription.InternalError, "Cannot request client certificate before receiving one from the server.");
 				
-				localClientCertificate = SelectClientCertificate (remoteCertificate, null);
+
+			    var acceptableIssuers = CopyIssuers(new string[]);
+
+				localClientCertificate = SelectClientCertificate (acceptableIssuers);
 				
 				if (localClientCertificate == null) {
 					*chain = new UnityTls.unitytls_x509list_ref { handle = UnityTls.NativeInterface.UNITYTLS_INVALID_HANDLE };
