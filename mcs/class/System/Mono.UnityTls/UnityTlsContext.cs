@@ -514,7 +514,9 @@ namespace Mono.Unity
 					throw new TlsException (AlertDescription.InternalError, "Cannot request client certificate before receiving one from the server.");
 				
 
-			    var acceptableIssuers = CopyIssuers(new string[]);
+			    // var acceptableIssuers = CopyIssuers(new string[]);
+
+					var acceptableIssuers = new string[0];
 
 				localClientCertificate = SelectClientCertificate (acceptableIssuers);
 				
