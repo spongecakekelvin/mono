@@ -485,40 +485,13 @@ namespace Mono.Unity
 			context.CertificateCallback (ctx, cn, cnLen, caList, caListLen, chain, key, errorState);
 		}
 
-		// TODO: I think we're going to need something like this to convert the caList into an array of strings for SelectClientCertificate
-		// static string[] CopyIssuers (int count, IntPtr sizesPtr, IntPtr dataPtr)
-		// {
-		// 	if (count == 0 || sizesPtr == IntPtr.Zero || dataPtr == IntPtr.Zero)
-		// 		return null;
-		// 	var sizes = new int [count];
-		// 	Marshal.Copy (sizesPtr, sizes, 0, count);
-		// 	var data = new IntPtr [count];
-		// 	Marshal.Copy (dataPtr, data, 0, count);
-
-		// 	var issuers = new string [count];
-
-		// 	for (int i = 0; i < count; i++) {
-		// 		var buffer = new byte [sizes [i]];
-		// 		Marshal.Copy (data[i], buffer, 0, buffer.Length);
-		// 		using (var xname = MonoBtlsX509Name.CreateFromData (buffer, false))
-		// 			issuers[i] = MonoBtlsUtils.FormatName (xname, true, ", ", true);
-		// 	}
-
-		// 	return issuers;
-		// }
-
 		private void CertificateCallback (UnityTls.unitytls_tlsctx* ctx, Int8* cn, size_t cnLen, UnityTls.unitytls_x509name* caList, size_t caListLen, UnityTls.unitytls_x509list_ref* chain, UnityTls.unitytls_key_ref* key, UnityTls.unitytls_errorstate* errorState)
 		{
 			try { 
 				if (remoteCertificate == null)
 					throw new TlsException (AlertDescription.InternalError, "Cannot request client certificate before receiving one from the server.");
 				
-
-			    // var acceptableIssuers = CopyIssuers(new string[]);
-
-					var acceptableIssuers = new string[0];
-
-				localClientCertificate = SelectClientCertificate (acceptableIssuers);
+				localClientCertificate = SelectClientCertificate (null);
 				
 				if (localClientCertificate == null) {
 					*chain = new UnityTls.unitytls_x509list_ref { handle = UnityTls.NativeInterface.UNITYTLS_INVALID_HANDLE };
