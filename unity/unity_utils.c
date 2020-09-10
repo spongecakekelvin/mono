@@ -362,3 +362,13 @@ int mono_unity_gc_is_disabled()
 	return 0;
 #endif
 }
+
+MonoArray* mono_custom_attrs_construct_by_type(MonoCustomAttrInfo* cinfo, MonoClass* attr_klass, MonoError* error)
+{
+	return mono_custom_attrs_construct(cinfo);
+}
+
+MonoException* mono_unity_error_convert_to_exception(MonoError* error)
+{
+	return NULL;
+}

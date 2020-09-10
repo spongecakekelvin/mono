@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/appdomain.h>
+#include <mono/metadata/reflection.h>
+#include <mono/utils/mono-error.h>
 
 /**
  *	Custom exit function, called instead of system exit()
@@ -54,5 +56,8 @@ void mono_unity_domain_unload (MonoDomain *domain, MonoUnityExceptionFunc callba
 void mono_unity_gc_enable();
 void mono_unity_gc_disable();
 int mono_unity_gc_is_disabled();
+
+MonoArray* mono_custom_attrs_construct_by_type(MonoCustomAttrInfo* cinfo, MonoClass* attr_klass, MonoError* error);
+MonoException* mono_unity_error_convert_to_exception(MonoError* error);
 
 #endif
