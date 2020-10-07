@@ -940,6 +940,7 @@ MONO_API void mono_unity_gc_set_mode(MonoGCMode mode)
 			GC_set_disable_automatic_collection(TRUE);
 			break;
 	}
+#elif defined(HAVE_NULL_GC)
 #else
 	g_assert_not_reached ();
 #endif
