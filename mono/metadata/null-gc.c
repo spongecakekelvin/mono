@@ -277,19 +277,28 @@ mono_gc_make_root_descr_all_refs (int numbits)
 	return NULL;
 }
 
+#define ALIGN_TO(val,align) ((((guint64)val) + ((align) - 1)) & ~((align) - 1))
+
 void*
 mono_gc_alloc_fixed (size_t size, void *descr, MonoGCRootSource source, void *key, const char *msg)
 {
-	return g_malloc0 (size);
+	//return g_malloc0 (size);
+	size += sizeof(size_t);
+	size = ALIGN_TO (size, mono_pagesize ());
+	char* ret = VirtualAlloc (0, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	*(size_t*)ret = size;
+	ret += sizeof (size_t);
+	return ret;
 }
 
 void
 mono_gc_free_fixed (void* addr)
 {
-	g_free (addr);
+	char* start = (char*)addr - sizeof (size_t);
+	size_t length = *(size_t*)start;
+	int res = VirtualFree (start, length, MEM_DECOMMIT);
+	g_assert (res);
 }
-
-#define ALIGN_TO(val,align) ((((guint64)val) + ((align) - 1)) & ~((align) - 1))
 
 static void*
 gc_mempool_alloc (MonoDomain* domain, size_t size)
