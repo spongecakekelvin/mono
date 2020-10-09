@@ -104,8 +104,11 @@ static void gc_free_mempool (GCMemPool* mp)
 		int res = VirtualFree (chunk->start_of_memory, chunk->length, MEM_DECOMMIT);
 		g_assert (res);
 
+		GCMemChunk* prev = chunk;
 		chunk = chunk->next;
+		g_free (prev);
 	}
+	g_free (mp);
 }
 
 void
@@ -300,9 +303,14 @@ mono_gc_free_fixed (void* addr)
 	g_assert (res);
 }
 
+/* only one can be enabled at a time */
+#define GUARD_PRELUDE 0
+#define GUARD_POSTLUDE 0
+
 static void*
 gc_mempool_alloc (MonoDomain* domain, size_t size)
 {
+	void* ret = NULL;
 	mono_os_mutex_lock (&nullgc_mutex);
 	GCMemPool* mp = domain->gc_mp;
 	if (!mp)
@@ -310,6 +318,47 @@ gc_mempool_alloc (MonoDomain* domain, size_t size)
 
 	// keep 16 byte alignment
 	size = ALIGN_TO (size, 16);
+
+#if GUARD_PRELUDE
+	GCMemChunk* chunk = g_new0 (GCMemChunk, 1);;
+	size_t chunk_size = MAX ((mp->page_size), ALIGN_TO (size, mp->page_size));
+	chunk_size += mp->page_size;
+
+	chunk->start_of_memory = chunk->current_memory = (char*)VirtualAlloc (0, chunk_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	chunk->current_memory += mp->page_size;
+
+	DWORD old;
+	BOOL res = VirtualProtect (chunk->start_of_memory, mp->page_size, PAGE_NOACCESS, &old);
+	g_assert (res);
+
+	ret = chunk->current_memory;
+
+
+	chunk->length = chunk_size;
+
+	chunk->next = mp->chunks;
+	mp->chunks = chunk;
+#elif GUARD_POSTLUDE
+	GCMemChunk* chunk = g_new0 (GCMemChunk, 1);
+	size_t chunk_size = MAX ((mp->page_size), ALIGN_TO (size, mp->page_size));
+	chunk_size += mp->page_size;
+
+	chunk->start_of_memory = chunk->current_memory = (char*)VirtualAlloc (0, chunk_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	/* offset to abut last page */
+	chunk->current_memory += (chunk_size - mp->page_size - size);
+
+	DWORD old;
+	BOOL res = VirtualProtect (chunk->start_of_memory + chunk_size - mp->page_size, mp->page_size, PAGE_NOACCESS, &old);
+	g_assert (res);
+
+	ret = chunk->current_memory;
+
+
+	chunk->length = chunk_size;
+
+	chunk->next = mp->chunks;
+	mp->chunks = chunk;
+#else
 
 	GCMemChunk* chunk = mp->chunks;
 	if (!chunk || ((chunk->current_memory + size) > (chunk->start_of_memory + chunk->length)))
@@ -323,10 +372,11 @@ gc_mempool_alloc (MonoDomain* domain, size_t size)
 		mp->chunks = chunk;
 	}
 
-	void* ret = chunk->current_memory;
+	ret = chunk->current_memory;
 	chunk->current_memory += size;
 
 	g_assert (chunk->current_memory <= (chunk->start_of_memory + chunk->length));
+#endif
 
 	mono_os_mutex_unlock (&nullgc_mutex);
 
